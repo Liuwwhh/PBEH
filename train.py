@@ -36,7 +36,6 @@ def train_model(args, log,
     torch.manual_seed(args.seed)
     hashing_model.add_prompt(args, init_prompt_number)
     # optimizer
-    # 剔除掉不需要训练的参数
     if task_index == 0:
         optimizer = optim.AdamW(
             [
@@ -76,54 +75,26 @@ def train_model(args, log,
             similarity_matrix = 1 / (1+torch.exp(-similarity_matrix))
             similarity_matrix = 2 * similarity_matrix.float() - 1
 
-            # 损失计算 ----------------------------------------------------------
-            # 松弛码余弦相似
             hash_cos_sim_loss = (torch.sum(1 - criterion(image_hash, text_hash)) + torch.sum(1 - criterion(torch.sign(image_hash), torch.sign(text_hash)))) * args.hash_cos_sim_loss
 
-
-            # 相似度保持
             similartity_main_loss = (loss_l2(hash_similarity, similarity_matrix) + loss_l2(hash_similarity.t(), similarity_matrix)) * args.similartity_main_loss
             binary_similartity_main_loss = (loss_l2(binary_hash_similarity, similarity_matrix) + loss_l2(binary_hash_similarity.t(), similarity_matrix)) * args.binary_similartity_main_loss
 
-            # 量化损失
             quantify_loss = loss_l2(image_hash, torch.sign(image_hash)) + loss_l2(text_hash, torch.sign(text_hash))
             quantify_loss = quantify_loss * args.quantify_loss
 
-            # 判别性损失
             contras_loss = (contrastive_loss(image_hash, label) + contrastive_loss(text_hash, label)) * args.contras_loss
 
-            # 蒸馏损失
             disstill_loss = (loss_l2(image_hash, disstill_feature_text) + loss_l2(text_hash, disstill_feature_image)) * args.disstill_loss
 
-            # 总损失
             loss = hash_cos_sim_loss\
                 + similartity_main_loss + binary_similartity_main_loss\
                       + quantify_loss + contras_loss\
                           + disstill_loss
-            # 损失记录 log.info
-            # 新任务学习特有损失 --------------------------------------------------
-            # 中心分离约束（防止新任务哈希码与历史中心过近）
+
             if task_index == 0:
                 pass
             else:
-                if args.extend_hash_length:
-                    pass
-                else:
-                    # 图像模态中心约束
-                    radius_constraint_loss_image = CenterSeparationLoss(
-                        margin=-1, 
-                        history_code_mode_center=mode_center_image, 
-                        now_code=torch.sign(image_hash[:, :mode_center_image.shape[0]])
-                    )
-                    # 文本模态中心约束
-                    radius_constraint_loss_text = CenterSeparationLoss(
-                        margin=-1, 
-                        history_code_mode_center=mode_center_text, 
-                        now_code=torch.sign(text_hash[:, :mode_center_text.shape[0]])
-                    )
-                    loss += (radius_constraint_loss_image + radius_constraint_loss_text) * args.radius_constraint_loss
-                # 提示哈希一致性约束 -------------------------------------------------
-                # 提取当前提示哈希码
                 prompt_hash_main_loss = 0.
                 history_prompt_hash_list = hashing_model.extract_prompt_hash_train()
                 for prompt_hash_index in range(task_index):
@@ -132,8 +103,6 @@ def train_model(args, log,
                     prompt_hash_main_loss += torch.abs(prompt_hash - history_prompt_hash).sum()
                 loss += prompt_hash_main_loss * args.prompt_hash_main_loss
 
-            # 优化
-            # log.info(f"all_loss {loss}")
             loss.backward()
             optimizer.step()
 
@@ -170,7 +139,6 @@ def train_model(args, log,
     history_database_code_list_image.append(rBX)
     history_database_code_list_text.append(rBY)
 
-    # 所有任务都要进行扩展，取消中心约束
     mode_center_image, mode_center_text = comput_mode_center_list(args, history_database_code_list_image, history_database_code_list_text)
 
     if task_index != 0:
