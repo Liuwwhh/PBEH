@@ -14,14 +14,12 @@ class CustomDataSet(Dataset):
         self.texts = texts
         self.labels = labels
 
-    # 返回索引对应的图像文本和标签
     def __getitem__(self, index):
         img = self.images[index]
         text = self.texts[index, :]
         label = self.labels[index, :]
         return img, text, label
 
-    # 返回数据集长度
     def __len__(self):
         # sun1 = len(self.images)
         # sum2 = len(self.labels)
