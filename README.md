@@ -22,7 +22,7 @@ url: https://pan.baidu.com/s/1njmBa0j0EfeD_CzT0V4ZgA?pwd=2025
 code: 2025
 ```
 
-2. Change the value of `data_path` in file `./config.yaml` to `/path/to/dataset`.
+2. Change the value of `data_path` in file `main.py` to `/path/to/dataset`.
 
 ## python environment
 ``` bash
