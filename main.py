@@ -10,9 +10,9 @@ from utils import logger, set_seed, creat_result_dict, save_result_dict
 
 parser = argparse.ArgumentParser()
 # runid
-parser.add_argument('--runid', type=str, default='18', help='run id')
+parser.add_argument('--runid', type=str, default='1', help='run id')
 
-parser.add_argument("--data_path", default="/data/liuwenhao/data/mat/", type=str)
+parser.add_argument("--data_path", default="/path/to/data/mat/", type=str)
 parser.add_argument("--output_dir", default="./outputs/", type=str)
 parser.add_argument("--epoch", default=100, type=int)
 parser.add_argument('--valid', type=bool, default=True, help='Whether to valid after per train.')
@@ -27,8 +27,8 @@ parser.add_argument('--extend_hash_length', type=bool, default=False, help='Whet
 parser.add_argument("--dataset_name", default="MSCOCO", type=str, help="MSCOCO/NUSWIDE")
 parser.add_argument("--bit", default=16, type=int, help="16/32/64/128/256")
 parser.add_argument("--prompt_mode", default='share', type=str, help="0: share, 1: separate")
-parser.add_argument('--prompt_extend_per_sample_number', type=int, default=400, help='一个提示所承载的样本数量（参数敏感性）')
-parser.add_argument('--extend_bit', type=int, default=1, help='扩展提示的位数（参数敏感性）')
+parser.add_argument('--prompt_extend_per_sample_number', type=int, default=400)
+parser.add_argument('--extend_bit', type=int, default=1)
 
 # loss
 parser.add_argument('--hash_cos_sim_loss', type=float, default=0.1)
@@ -43,7 +43,7 @@ parser.add_argument('--radius_constraint_loss', type=float, default=10)
 parser.add_argument('--learning_rate', type=float, default=0.00001)
 parser.add_argument('--extend_learning_rate', type=float, default=0.00001)
 parser.add_argument('--mothod', type=str, default='1')
-parser.add_argument('--error_samples_ratio', type=float, default=0.1, help='0/0.02/0.04/0.06/0.08/0.1,超出距离众数中心点一半哈希码的样本数量占据比，超出则进行扩展，越小越严格')
+parser.add_argument('--error_samples_ratio', type=float, default=0.1)
 
 args = parser.parse_args()
 args.extend_learning_rate = args.learning_rate * 0.1
@@ -52,10 +52,10 @@ def main():
     log = logger(args)
     set_seed(args.seed)
     args.dataset_path = os.path.join(args.data_path, args.dataset_name)
-    # 创建模型检查点和结果保存路径
+
     checkpoint_folder = os.path.join(args.output_dir, 'checkpoints', '{}'.format(args.runid))
     csv_folder = os.path.join(args.output_dir, 'csv_result', '{}'.format(args.runid))
-    # 确保目录存在
+
     Path(checkpoint_folder).mkdir(parents=True, exist_ok=True)
     Path(csv_folder).mkdir(parents=True, exist_ok=True)
 
