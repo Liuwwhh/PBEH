@@ -116,7 +116,6 @@ def train_model(args, log,
                                                 input_data_par['test_text'], input_data_par['database_text'],
                                                 input_data_par['test_label'], input_data_par['database_label'],
                                                 task_index, separation, top_k=1000)
-                log.info('...epoch: %3d, valid MAP: MAP_1000(i->t): %3.4f, MAP_1000(t->i): %3.4f' % (epoch + 1, mapi2t_1000, mapt2i_1000))
                 if mapi2t_1000+mapt2i_1000 > max_mapi2t+max_mapt2i:
                     max_mapi2t = mapi2t_1000
                     max_mapt2i = mapt2i_1000
