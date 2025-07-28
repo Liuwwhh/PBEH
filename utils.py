@@ -23,7 +23,7 @@ def logger(args):
     logger.setLevel(logging.DEBUG)
     log_floder_path = f'{args.output_dir}logs/{args.runid}/'
     os.makedirs(log_floder_path, exist_ok=True)
-    log_path = log_floder_path + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.log'.format(
+    log_path = log_floder_path + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.log'.format(
         args.dataset_name, 
         args.bit, 
         args.prompt_mode, 
@@ -35,7 +35,6 @@ def logger(args):
         args.quantify_loss, 
         args.contras_loss, 
         args.disstill_loss, 
-        args.radius_constraint_loss, 
         args.prompt_hash_main_loss, 
         args.error_samples_ratio
         )
@@ -74,7 +73,7 @@ def save_result_dict(args, result_dict, csv_folder):
 
     # Specify the CSV filepath
     os.makedirs(csv_folder, exist_ok=True)
-    csv_file = csv_folder + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.csv'.format(
+    csv_file = csv_folder + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.csv'.format(
         args.dataset_name, 
         args.bit, 
         args.prompt_mode, 
@@ -86,7 +85,6 @@ def save_result_dict(args, result_dict, csv_folder):
         args.quantify_loss, 
         args.contras_loss, 
         args.disstill_loss, 
-        args.radius_constraint_loss, 
         args.prompt_hash_main_loss, 
         args.error_samples_ratio
         )
@@ -241,8 +239,7 @@ def calc_map_k_unequal(task_index, args, qu_B, re_B, qu_L, re_L, topk=None):
         if ex_bits_len == 0:
             hamm = calc_hammingDist(qu_B[iter, :], re_B)
         elif ex_bits_len > 0:
-            if args.mothod == '1':
-                hamm = calc_hammingDist(qu_B[iter, :bits_len], re_B)
+            hamm = calc_hammingDist(qu_B[iter, :bits_len], re_B)
 
         _, ind = torch.sort(hamm, stable=True)   # 默认稳定排序
         ind.squeeze_()

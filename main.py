@@ -24,7 +24,7 @@ parser.add_argument('--num_tasks', type=int, default=5, help='number of tasks')
 parser.add_argument('--hamming_dis_threshold', type=float, default=0.5)
 parser.add_argument('--extend_hash_length', type=bool, default=False, help='Whether to extend the hash length.')
 
-parser.add_argument("--dataset_name", default="MSCOCO", type=str, help="MSCOCO/NUSWIDE")
+parser.add_argument("--dataset_name", default="MSCOCO", type=str, help="MSCOCO/NUSWIDE/MSCOCO_NoMean/NUSWIDE_NoMean")
 parser.add_argument("--bit", default=16, type=int, help="16/32/64/128/256")
 parser.add_argument("--prompt_mode", default='share', type=str, help="0: share, 1: separate")
 parser.add_argument('--prompt_extend_per_sample_number', type=int, default=400)
@@ -38,11 +38,9 @@ parser.add_argument('--quantify_loss', type=float, default=10)
 parser.add_argument('--contras_loss', type=float, default=1)
 parser.add_argument('--disstill_loss', type=float, default=200)
 parser.add_argument('--prompt_hash_main_loss', type=float, default=0.1)
-parser.add_argument('--radius_constraint_loss', type=float, default=10)
 
-parser.add_argument('--learning_rate', type=float, default=0.00001)
+parser.add_argument('--learning_rate', type=float, default=0.0001)
 parser.add_argument('--extend_learning_rate', type=float, default=0.00001)
-parser.add_argument('--mothod', type=str, default='1')
 parser.add_argument('--error_samples_ratio', type=float, default=0.1)
 
 args = parser.parse_args()
@@ -59,7 +57,7 @@ def main():
     Path(checkpoint_folder).mkdir(parents=True, exist_ok=True)
     Path(csv_folder).mkdir(parents=True, exist_ok=True)
 
-    checkpoints_path = checkpoint_folder + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pth'.format(
+    checkpoints_path = checkpoint_folder + '/' + '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pth'.format(
         args.dataset_name, 
         args.bit, 
         args.prompt_mode, 
@@ -71,7 +69,6 @@ def main():
         args.quantify_loss, 
         args.contras_loss, 
         args.disstill_loss, 
-        args.radius_constraint_loss, 
         args.prompt_hash_main_loss, 
         args.error_samples_ratio
         )
