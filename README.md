@@ -1,6 +1,14 @@
 # PBEH
 The source code for the paper "Prompt-driven Bit Extension Hashing".
 
+## Abstract
+Continual cross-modal hashing is critical for efficient retrieval across heterogeneous modalities in dynamic environments. Yet, existing approaches primarily focus on mitigating catastrophic forgetting, while overlooking two key challenges: 1) the hash collision arising from the excessive utilization of the Hamming space across tasks, and 2) the absence of consistency modeling for cross-modal dynamic associations. To address these challenges, we introduce Prompt-driven Bit Extension Hashing (PBEH), a novel framework that dynamically extends hash codes to prevent hash collisions and capture evolving modality-aligned semantics in continuously expanding multi-modal data. Specifically, PBEH first adaptively initializes a set of modality-shared prompts for each task, which are jointly optimized with the hashing functions to enhance model plasticity and retain task-specific knowledge, enabling continual cross-modal semantic alignment. In parallel, a dynamic Hamming space extension mechanism allocates dedicated capacity per task, alleviating bottlenecks and inter-task collisions. During retrieval, queries are encoded via the extended hash functions and matched to stored codes using a truncated strategy for compatibility. To ensure efficiency and semantic stability, only the prompts and hashing functions are updated while the pre-trained backbone remains frozen. Extensive experiments demonstrate that PBEH achieves superior and stable performance in continual cross-modal retrieval with substantially reduced computational overhead.
+
+## The overall framework
+![](WorkFrame.pdf)
+
+The overall framework of our Prompt-driven Bit Extension Hashing (PBEH) for continual cross-modal retrieval. (a) During training, frozen pre-trained encoders perform \textit{multi-modal embedding extraction}, followed by \textit{modality-shared prompt learning} to obtain enhanced prompts. These prompts are concatenated with the embeddings and passed through hashing functions to generate binary codes. After each task, \textit{dynamic Hamming space extension} is applied if necessary. (b) Database samples are encoded via the frozen encoders and hashing functions, with their hash codes stored. (c) At query time, query samples are similarly encoded and compared to stored codes for retrieval, supporting both equal and unequal code lengths.
+
 ## datasets & pre-trained cmh models
 1. Download datasets MSCOCO and NUSWIDE
 
