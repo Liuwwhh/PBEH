@@ -9,7 +9,7 @@ Continual cross-modal hashing is critical for efficient retrieval across heterog
 
 The overall framework of our Prompt-driven Bit Extension Hashing (PBEH) for continual cross-modal retrieval. (a) During training, frozen pre-trained encoders perform **multi-modal embedding extraction**, followed by **modality-shared prompt learning** to obtain enhanced prompts. These prompts are concatenated with the embeddings and passed through hashing functions to generate binary codes. After each task, **dynamic Hamming space extension** is applied if necessary. (b) Database samples are encoded via the frozen encoders and hashing functions, with their hash codes stored. (c) At query time, query samples are similarly encoded and compared to stored codes for retrieval, supporting both equal and unequal code lengths.
 
-## datasets & pre-trained cmh models
+## Datasets & Pre-trained CMH Models
 1. Download datasets MSCOCO and NUSWIDE
 
 ```
@@ -32,14 +32,14 @@ code: 2025
 
 2. Change the value of `data_path` in file `main.py` to `/path/to/dataset`.
 
-## python environment
+## Python Environment
 ``` bash
 conda create -n PBEH python=3.8
 conda activate PBEH
 pip install -r requirements.txt
 ```
 
-## training
+## Training
 ``` python
 python main.py
 ```
