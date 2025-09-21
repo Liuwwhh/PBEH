@@ -40,7 +40,6 @@ parser.add_argument('--disstill_loss', type=float, default=200)
 parser.add_argument('--prompt_hash_main_loss', type=float, default=0.1)
 
 parser.add_argument('--learning_rate', type=float, default=0.0001)
-parser.add_argument('--extend_learning_rate', type=float, default=0.00001)
 parser.add_argument('--error_samples_ratio', type=float, default=0.1)
 
 args = parser.parse_args()
@@ -77,8 +76,6 @@ def main():
     prompt_hash_list = []
     history_database_code_list_image = []
     history_database_code_list_text = []
-    # history_database_relax_code_list_image = []
-    # history_database_relax_code_list_text = []
     mode_center_image, mode_center_text = None, None
     args.current_bit = args.bit
 
@@ -97,7 +94,6 @@ def main():
                     result_dict, checkpoints_path, 
                     mode_center_image, mode_center_text, 
                     history_database_code_list_image, history_database_code_list_text, 
-                    # history_database_relax_code_list_image, history_database_relax_code_list_text,
                     prompt_hash_list)
         log.info(f'The {task_index+1} task is trained')
 
