@@ -1,12 +1,10 @@
-import os
 import torch
 import numpy as np
 from torch import nn
 from tqdm import tqdm
 import torch.optim as optim
-import torch.nn.functional as F
 from load_data import get_data
-from utils import calc_map_k, calc_map_k_unequal, CenterSeparationLoss, extract_prompt_hash_test, comput_mode_center_list, contrastive_loss
+from utils import calc_map_k, calc_map_k_unequal, extract_prompt_hash_test, comput_mode_center_list, contrastive_loss
 
 loss_l2 = torch.nn.MSELoss()
 criterion = nn.CosineSimilarity(dim=1)
@@ -18,14 +16,11 @@ def train_model(args, log,
                 result_dict, checkpoints_path, 
                 mode_center_image, mode_center_text, 
                 history_database_code_list_image, history_database_code_list_text, 
-                # history_database_relax_code_list_image, history_database_relax_code_list_text,
                 prompt_hash_list):
-    # If it's not the first task then the previous model needs to be loaded
     if task_index != 0:
         hashing_model.load(checkpoints_path)
         hashing_model.cuda()
     
-    # Initialize the hash layer
     hashing_model.eval()
     if args.extend_hash_length:
         args.current_bit += args.extend_bit
@@ -35,7 +30,7 @@ def train_model(args, log,
 
     torch.manual_seed(args.seed)
     hashing_model.add_prompt(args, init_prompt_number)
-    # optimizer
+
     if task_index == 0:
         optimizer = optim.AdamW(
             [
@@ -52,7 +47,6 @@ def train_model(args, log,
                 {'params': hashing_model.prompt_list[-1], 'lr': args.learning_rate},
             ]
         )
-    # optimizer = optim.AdamW(hashing_model.parameters(), lr=learning_rate)
 
     max_mapi2t = max_mapt2i = torch.zeros(1, dtype=torch.float32)
     max_mapi2t = max_mapi2t.cuda()
@@ -67,7 +61,6 @@ def train_model(args, log,
             hashing_model.train()
             optimizer.zero_grad()
 
-            # get hash code
             image_hash, text_hash, disstill_feature_image, disstill_feature_text = hashing_model(image, text, task_index)
             hash_similarity = image_hash.mm(text_hash.t())
             binary_hash_similarity = torch.sign(image_hash).mm(torch.sign(text_hash).t())
@@ -87,10 +80,7 @@ def train_model(args, log,
 
             disstill_loss = (loss_l2(image_hash, disstill_feature_text) + loss_l2(text_hash, disstill_feature_image)) * args.disstill_loss
 
-            loss = hash_cos_sim_loss\
-                + similartity_main_loss + binary_similartity_main_loss\
-                      + quantify_loss + contras_loss\
-                          + disstill_loss
+            loss = hash_cos_sim_loss + similartity_main_loss + binary_similartity_main_loss + quantify_loss + contras_loss + disstill_loss
 
             if task_index == 0:
                 pass
@@ -150,8 +140,8 @@ def train_model(args, log,
 
             qBX, qBY = generate_code(hashing_model, test_image, test_text, args, task_index)
 
-            mapi2t_1000 = calc_map_k_unequal(i, args, qBX, history_database_code_list_text[i], test_label, database_label, 1000)
-            mapt2i_1000 = calc_map_k_unequal(i, args, qBY, history_database_code_list_image[i], test_label, database_label, 1000)
+            mapi2t_1000 = calc_map_k_unequal(qBX, history_database_code_list_text[i], test_label, database_label, 1000)
+            mapt2i_1000 = calc_map_k_unequal(qBY, history_database_code_list_image[i], test_label, database_label, 1000)
             log.info('...The {} data test is finished...'.format(i+1))
             log.info('...test MAP: MAP_1000(i->t): %3.4f, MAP_1000(t->i): %3.4f' % (mapi2t_1000, mapt2i_1000))
             if task_index == 0:
@@ -169,10 +159,6 @@ def valid_fun(hashing_model, args, query_x, retrieval_x, query_y, retrieval_y, q
 
     mapi2t_1000 = calc_map_k(qBX, rBY, query_L, retrieval_L, top_k)
     mapt2i_1000 = calc_map_k(qBY, rBX, query_L, retrieval_L, top_k)
-    # mapi2t_1000_I2I = calc_map_k(qBX, rBX, query_L, retrieval_L, top_k)
-    # mapt2i_1000_T2T = calc_map_k(qBY, rBY, query_L, retrieval_L, top_k)
-    # print('mapi2t_1000:', mapi2t_1000_I2I)
-    # print('mapt2i_1000:', mapt2i_1000_T2T)
     return mapi2t_1000, mapt2i_1000
 
 @torch.no_grad()
