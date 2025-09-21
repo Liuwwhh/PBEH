@@ -5,7 +5,6 @@ import logging
 import numpy as np
 from torch.nn import functional as F
 
-
 def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -168,25 +167,10 @@ def calc_hammingDist(B1, B2):
     return distH
 
 
-def calc_neighbor(label1, label2, device):
-    # calculate the similar matrix
-    Sim = (label1.matmul(label2.transpose(0, 1)) > 0).type(torch.FloatTensor)
-    Sim = Sim.to(device)
-    return Sim
-
-
 def compute_mode_center(h_matrix):
     mode_center = torch.sign(torch.sum(h_matrix, dim=0))  # (hash_length,)
     mode_center_ste = h_matrix.mean(dim=0) + (mode_center - h_matrix.mean(dim=0)).detach()
     return mode_center_ste
-
-
-def CenterSeparationLoss(margin, history_code_mode_center, now_code):
-    c2 = compute_mode_center(now_code)  # (hash_length,)
-    
-    similarity = torch.dot(history_code_mode_center, c2) / now_code.size(1)  # 归一化到[-1, 1]
-    
-    return F.relu(similarity - margin)
 
 
 @torch.no_grad()
@@ -201,8 +185,6 @@ def extract_prompt_hash_test(args, hashing_model, iteration, init_prompt_number)
             hashing_model.prompt_list[iteration][init_prompt_number:, :], 
             hashing_model.prompt_list[iteration][init_prompt_number:, :])
 
-        # fusion_prompt_image, fusion_prompt_text = hashing_model.fusion()
-
         prompt_hash_code_image = hashing_model.image_net(torch.cat((prompt_feature_image[0], prompt_feature_image[0]), dim=1))
         prompt_hash_code_text = hashing_model.text_net(torch.cat((prompt_feature_text[0], prompt_feature_text[0]), dim=1))
     elif args.prompt_mode == 'share':
@@ -215,19 +197,16 @@ def extract_prompt_hash_test(args, hashing_model, iteration, init_prompt_number)
             hashing_model.prompt_list[iteration],
             hashing_model.prompt_list[iteration])
 
-        # fusion_prompt_image, fusion_prompt_text = hashing_model.fusion()
-
         prompt_hash_code_image = hashing_model.image_net(torch.cat((prompt_feature_image[0], prompt_feature_image[0]), dim=1))
         prompt_hash_code_text = hashing_model.text_net(torch.cat((prompt_feature_text[0], prompt_feature_text[0]), dim=1))
     
     return torch.cat((prompt_hash_code_image, prompt_hash_code_text), dim=0)
 
 
-def calc_map_k_unequal(task_index, args, qu_B, re_B, qu_L, re_L, topk=None):
+def calc_map_k_unequal(qu_B, re_B, qu_L, re_L, topk=None):
     bits_len = re_B.shape[1]
     ex_bits_len = qu_B.shape[1] - bits_len
     num_query = qu_L.shape[0]
-    num_database = re_B.shape[0]
     map = 0
     if topk is None:
         topk = re_L.shape[0]
@@ -255,10 +234,6 @@ def calc_map_k_unequal(task_index, args, qu_B, re_B, qu_L, re_L, topk=None):
         map = map + torch.mean(count / tindex)
     map = map / num_query
     return map
-
-
-def sliding_windows(query, window_size=32):
-    return [query[i:i+window_size] for i in range(len(query)-window_size+1)]
 
 
 def comput_mode_center_list(args, history_database_code_list_image, history_database_code_list_text):
@@ -293,8 +268,6 @@ def compute_mode_center(h_matrix):
     mode_center_ste = h_matrix.mean(dim=0) + (mode_center - h_matrix.mean(dim=0)).detach()
     return mode_center_ste
 
-import torch
-import torch.nn.functional as F
 
 def contrastive_loss(image_hash, label_matrix, temperature=0.1, epsilon=1e-8):
     sim_matrix = torch.matmul(image_hash, image_hash.T) / temperature
@@ -310,19 +283,4 @@ def contrastive_loss(image_hash, label_matrix, temperature=0.1, epsilon=1e-8):
     
     loss = loss_per_sample.mean()
     
-    return loss
-
-        
-def MultiLabelContrastiveLoss(image_emb, text_emb, label_sim):
-    logits = torch.mm(image_emb, text_emb.T) / 0.1  # [N, N]
-    
-    pos_weight = label_sim  
-    
-    neg_weight = 1 - pos_weight
-    
-    exp_logits = torch.exp(logits)
-    pos_term = (pos_weight * logits).sum(dim=1)
-    neg_term = torch.log(exp_logits * neg_weight).sum(dim=1)
-    
-    loss = - (pos_term - neg_term).mean()
     return loss
